@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "date-fns": "^2.16.1",
+    "emoji-aware": "^3.0.5",
     "line-reader": "^0.4.0",
     "lodash": "^4.17.20"
   }
