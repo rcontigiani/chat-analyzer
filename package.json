@@ -1,0 +1,17 @@
+{
+  "name": "chat-analyzer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js"
+  },
+  "author": "riccardo contigiani",
+  "license": "ISC",
+  "dependencies": {
+    "date-fns": "^2.16.1",
+    "line-reader": "^0.4.0",
+    "lodash": "^4.17.20"
+  }
+}
