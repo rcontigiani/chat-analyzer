@@ -156,7 +156,8 @@ const getMostUsedEmojiBySender = (groupedSet) => {
         key: key,
         value: value,
       }));
-      kpi[sender] = count;
+      const orderedEmoji = _.orderBy(count, ['value'],['desc']);
+      kpi[sender] = orderedEmoji;
     } catch (e) {
       console.error(e);
     }
