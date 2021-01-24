@@ -2,7 +2,9 @@ const fs = require("fs");
 const lineReader = require("line-reader");
 var parse = require("date-fns/parse");
 var getHours = require("date-fns/getHours");
-var getDay = require('date-fns/getDay')
+var getDay = require("date-fns/getDay");
+var getMonth = require("date-fns/getMonth");
+var getYear = require("date-fns/getYear");
 var _ = require("lodash");
 var onlyEmoji = require("emoji-aware").onlyEmoji;
 
@@ -45,7 +47,7 @@ const readChat = () => {
 };
 
 const analyzeChat = () => {
-  const chatGroupedBySender = getGroupedBySender(chat);
+  /*const chatGroupedBySender = getGroupedBySender(chat);
   const nMessageBySender = getNMessageBySender(chatGroupedBySender);
   const messageLettersAvgLengthBySender = getMessageLettersAvgLengthBySender(
     chatGroupedBySender
@@ -56,9 +58,11 @@ const analyzeChat = () => {
 
   const messageByHours = getMessageByHours();
 
-  const messageByWeekDay = getMessageByWeekDay();
+  const messageByWeekDay = getMessageByWeekDay();*/
 
-  const emojiMessageGroupedBySender = getEmojiMessageBySender(
+  const messageByMonth = getMessageByMonth();
+
+  /*const emojiMessageGroupedBySender = getEmojiMessageBySender(
     chatGroupedBySender
   );
   const messageNEmojiTotalUsageBySender = getMessageNEmojiTotalUsageBySender(
@@ -66,16 +70,17 @@ const analyzeChat = () => {
   );
   const mostUsedEmojiBySender = getMostUsedEmojiBySender(
     emojiMessageGroupedBySender
-  );
+  );*/
 
   results = {
-    nMessageBySender: nMessageBySender,
+    /*nMessageBySender: nMessageBySender,
     messageLettersAvgLengthBySender: messageLettersAvgLengthBySender,
     messageWordsAvgLengthBySender: messageWordsAvgLengthBySender,
     messageNEmojiTotalUsageBySender: messageNEmojiTotalUsageBySender,
     mostUsedEmojiBySender: mostUsedEmojiBySender,
     messageByHours: messageByHours,
-    messageByWeekDay:  messageByWeekDay,
+    messageByWeekDay: messageByWeekDay,*/
+    messageByMonth: messageByMonth,
   };
   writeResultFile();
 };
@@ -160,6 +165,51 @@ const getMessageByWeekDay = () => {
     });
 
     kpi = wdMessageListGroupedBySender;
+  } catch (e) {
+    console.error(e);
+  }
+  return kpi;
+};
+
+const getMessageByMonth = () => {
+  var kpi = {};
+  try {
+    const years = _.groupBy(chat, (i) => getYear(i.date));
+    Object.entries(years).forEach(([key, value]) => {
+      const year = key;
+
+      const monthMessageList = [];
+      for (i = 0; i < 12; i++) {
+        const monthItem = value.filter((m) => getMonth(m.date) === i);
+        const item = {
+          month: i,
+          items: monthItem,
+        };
+        monthMessageList.push(item);
+      }
+
+      const monthMessageListGroupedBySender = [];
+      monthMessageList.forEach((hi) => {
+        const items = hi?.items;
+        const grouped = getGroupedBySender(items);
+        const monthItem = {};
+        let sendersTotal = 0;
+        Object.entries(grouped).forEach(([key, value]) => {
+          const len = value?.length;
+          monthItem[key] = len;
+          sendersTotal += len;
+        });
+
+        monthItem.total = sendersTotal;
+
+        const item = {
+          month: hi?.month,
+          count: monthItem,
+        };
+        monthMessageListGroupedBySender.push(item);
+      });
+      kpi[year] = monthMessageListGroupedBySender;
+    });
   } catch (e) {
     console.error(e);
   }
