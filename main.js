@@ -37,12 +37,15 @@ const readChat = () => {
       const msgSender = content?.[0]?.trim();
       const msgText = content?.[1]?.trim();
 
-      const msg = {
-        date: msgDate,
-        msgSender: msgSender,
-        msgText: msgText,
-      };
-      chat.push(msg);
+      if (content && msgSender && msgText) {
+        const msg = {
+          date: msgDate,
+          msgSender: msgSender,
+          msgText: msgText,
+        };
+        chat.push(msg);
+      }
+
       if (last) analyzeChat();
     } catch (e) {
       console.error("error", e);
