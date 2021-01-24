@@ -8,17 +8,25 @@ var getYear = require("date-fns/getYear");
 var _ = require("lodash");
 var onlyEmoji = require("emoji-aware").onlyEmoji;
 var withoutEmoji = require("emoji-aware").withoutEmoji;
+var figlet = require("figlet");
 
 const chat = [];
 var results = {};
 
 // Functions
 const initMessage = () => {
-  console.log("-------------------");
-  console.log("-------------------");
-  console.log("------ INIT -------");
-  console.log("-------------------");
-  console.log("-------------------");
+  return new Promise((resolve, reject) => {
+    figlet("Chat Analyzer!!!", function (err, data) {
+      if (err) {
+        console.log("Something went wrong...");
+        console.dir(err);
+        reject();
+        return;
+      }
+      console.log(data);
+      resolve();
+    });
+  });
 };
 
 const readChat = () => {
@@ -419,8 +427,9 @@ const writeResultFile = () => {
 };
 
 const main = () => {
-  initMessage();
-  readChat();
+  initMessage().then(() => {
+    readChat();
+  });
 };
 
 main();
