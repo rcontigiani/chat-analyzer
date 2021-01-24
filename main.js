@@ -296,8 +296,8 @@ const getEmojiMessageBySender = (groupedSet) => {
       const sender = key;
       var emojiList = [];
       value.forEach((i) => {
-        const emojiInMsg = onlyEmoji(i?.msgText);
-        if (emojiInMsg.length) {
+        const emojiInMsg = i?.msgText && onlyEmoji(i?.msgText);
+        if (emojiInMsg?.length) {
           emojiList.push(emojiInMsg);
         }
       });
