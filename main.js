@@ -2,6 +2,7 @@ const fs = require("fs");
 const lineReader = require("line-reader");
 var parse = require("date-fns/parse");
 var getHours = require("date-fns/getHours");
+var getDay = require('date-fns/getDay')
 var _ = require("lodash");
 var onlyEmoji = require("emoji-aware").onlyEmoji;
 
@@ -55,6 +56,8 @@ const analyzeChat = () => {
 
   const messageByHours = getMessageByHours();
 
+  const messageByWeekDay = getMessageByWeekDay();
+
   const emojiMessageGroupedBySender = getEmojiMessageBySender(
     chatGroupedBySender
   );
@@ -72,6 +75,7 @@ const analyzeChat = () => {
     messageNEmojiTotalUsageBySender: messageNEmojiTotalUsageBySender,
     mostUsedEmojiBySender: mostUsedEmojiBySender,
     messageByHours: messageByHours,
+    messageByWeekDay:  messageByWeekDay,
   };
   writeResultFile();
 };
@@ -115,6 +119,47 @@ const getMessageByHours = () => {
     });
 
     kpi = hourMessageListGroupedBySender;
+  } catch (e) {
+    console.error(e);
+  }
+  return kpi;
+};
+
+const getMessageByWeekDay = () => {
+  var kpi = {};
+  try {
+    const wdMessageList = [];
+    for (i = 0; i < 7; i++) {
+      const wdItem = chat.filter((m) => getDay(m.date) === i);
+      const item = {
+        weekDay: i,
+        items: wdItem,
+      };
+      wdMessageList.push(item);
+    }
+
+    const wdMessageListGroupedBySender = [];
+    wdMessageList.forEach((hi) => {
+      const items = hi?.items;
+      const grouped = getGroupedBySender(items);
+      const wdItem = {};
+      let sendersTotal = 0;
+      Object.entries(grouped).forEach(([key, value]) => {
+        const len = value?.length;
+        wdItem[key] = len;
+        sendersTotal += len;
+      });
+
+      wdItem.total = sendersTotal;
+
+      const item = {
+        weekDay: hi?.weekDay,
+        count: wdItem,
+      };
+      wdMessageListGroupedBySender.push(item);
+    });
+
+    kpi = wdMessageListGroupedBySender;
   } catch (e) {
     console.error(e);
   }
