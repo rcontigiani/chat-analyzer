@@ -7,18 +7,23 @@ var getMonth = require("date-fns/getMonth");
 var getYear = require("date-fns/getYear");
 var _ = require("lodash");
 var onlyEmoji = require("emoji-aware").onlyEmoji;
-
-console.log("-------------------");
-console.log("-------------------");
-console.log("------ INIT -------");
-console.log("-------------------");
-console.log("-------------------");
+var withoutEmoji = require("emoji-aware").withoutEmoji;
 
 const chat = [];
 var results = {};
 
 // Functions
+const initMessage = () => {
+  console.log("-------------------");
+  console.log("-------------------");
+  console.log("------ INIT -------");
+  console.log("-------------------");
+  console.log("-------------------");
+};
+
 const readChat = () => {
+  console.log("📄 Reading File...");
+
   lineReader.eachLine("chat.txt", function (line, last) {
     try {
       const lineSplit = line?.split("-");
@@ -28,9 +33,9 @@ const readChat = () => {
         new Date()
       );
 
-      const content = lineSplit?.[1].split(":");
-      const msgSender = content?.[0].trim();
-      const msgText = content?.[1].trim();
+      const content = lineSplit?.[1]?.split(":");
+      const msgSender = content?.[0]?.trim();
+      const msgText = content?.[1]?.trim();
 
       const msg = {
         date: msgDate,
@@ -38,16 +43,18 @@ const readChat = () => {
         msgText: msgText,
       };
       chat.push(msg);
-
       if (last) analyzeChat();
     } catch (e) {
-      //console.log("error", e);
+      console.error("error", e);
     }
   });
+
+  console.log("📄 File Reading Completed!");
 };
 
 const analyzeChat = () => {
-  /*const chatGroupedBySender = getGroupedBySender(chat);
+  console.log("📈 Starting Analysis...");
+  const chatGroupedBySender = getGroupedBySender(chat);
   const nMessageBySender = getNMessageBySender(chatGroupedBySender);
   const messageLettersAvgLengthBySender = getMessageLettersAvgLengthBySender(
     chatGroupedBySender
@@ -58,11 +65,13 @@ const analyzeChat = () => {
 
   const messageByHours = getMessageByHours();
 
-  const messageByWeekDay = getMessageByWeekDay();*/
+  const messageByWeekDay = getMessageByWeekDay();
 
   const messageByMonth = getMessageByMonth();
 
-  /*const emojiMessageGroupedBySender = getEmojiMessageBySender(
+  const mostUsedWordsBySender = getMostUserWordBySender(chatGroupedBySender);
+
+  const emojiMessageGroupedBySender = getEmojiMessageBySender(
     chatGroupedBySender
   );
   const messageNEmojiTotalUsageBySender = getMessageNEmojiTotalUsageBySender(
@@ -70,18 +79,22 @@ const analyzeChat = () => {
   );
   const mostUsedEmojiBySender = getMostUsedEmojiBySender(
     emojiMessageGroupedBySender
-  );*/
+  );
 
   results = {
-    /*nMessageBySender: nMessageBySender,
+    nMessageBySender: nMessageBySender,
     messageLettersAvgLengthBySender: messageLettersAvgLengthBySender,
     messageWordsAvgLengthBySender: messageWordsAvgLengthBySender,
     messageNEmojiTotalUsageBySender: messageNEmojiTotalUsageBySender,
     mostUsedEmojiBySender: mostUsedEmojiBySender,
     messageByHours: messageByHours,
-    messageByWeekDay: messageByWeekDay,*/
+    messageByWeekDay: messageByWeekDay,
     messageByMonth: messageByMonth,
+    mostUsedWordsBySender: mostUsedWordsBySender,
   };
+
+  console.log("📈 Analysis Completed!");
+
   writeResultFile();
 };
 
@@ -90,6 +103,8 @@ const getGroupedBySender = (items) => {
 };
 
 const getMessageByHours = () => {
+  console.log("📊 Starting - Message By Hour Analysis");
+
   var kpi = {};
   try {
     const hourMessageList = [];
@@ -127,10 +142,15 @@ const getMessageByHours = () => {
   } catch (e) {
     console.error(e);
   }
+
+  console.log("📊 Completed - Message By Hour Analysis");
+
   return kpi;
 };
 
 const getMessageByWeekDay = () => {
+  console.log("📊 Starting - Message By Week Day Analysis");
+
   var kpi = {};
   try {
     const wdMessageList = [];
@@ -168,10 +188,15 @@ const getMessageByWeekDay = () => {
   } catch (e) {
     console.error(e);
   }
+
+  console.log("📊 Completed - Message By Week Day Analysis");
+
   return kpi;
 };
 
 const getMessageByMonth = () => {
+  console.log("📊 Starting - Message By Month (Grouped by year) Analysis");
+
   var kpi = {};
   try {
     const years = _.groupBy(chat, (i) => getYear(i.date));
@@ -213,10 +238,58 @@ const getMessageByMonth = () => {
   } catch (e) {
     console.error(e);
   }
+
+  console.log("📊 Completed - Message By Month (Grouped by year) Analysis");
+
+  return kpi;
+};
+
+const getMostUserWordBySender = (groupedSet) => {
+  console.log("📊 Starting - Most Used Words Analysis");
+  const kpi = {};
+
+  try {
+    Object.entries(groupedSet).forEach(([key, value]) => {
+      const sender = key;
+      const messages = value;
+
+      let fullTextString = "";
+      messages.forEach((m) => {
+        fullTextString = fullTextString.concat(" ", m?.msgText);
+      });
+
+      const fullTextAndEmojiArray = fullTextString
+        ?.split(" ")
+        .filter((t) => t?.length > 3);
+
+      const fullTextArray = [];
+      fullTextAndEmojiArray.forEach((i) => {
+        const wordLettersArray = withoutEmoji(i);
+        const wordLetters = wordLettersArray.join("");
+        if (wordLetters?.length > 3) fullTextArray.push(wordLetters);
+      });
+
+      const count = _.map(_.countBy(fullTextArray), (value, key) => ({
+        key: key,
+        value: value,
+      }));
+
+      const orderedWords = _.orderBy(count, ["value"], ["desc"]);
+
+      kpi[sender] = orderedWords;
+    });
+  } catch (e) {
+    console.error(e);
+  }
+
+  console.log("📊 Completed - Most Used Words Analysis");
+
   return kpi;
 };
 
 const getEmojiMessageBySender = (groupedSet) => {
+  console.log("📊 Starting - Most Used Emoji Analysis");
+
   const kpi = {};
   Object.entries(groupedSet).forEach(([key, value]) => {
     try {
@@ -233,18 +306,26 @@ const getEmojiMessageBySender = (groupedSet) => {
       console.error(e);
     }
   });
+
+  console.log("📊 Completed - Most Used Emoji Analysis");
+
   return kpi;
 };
 
 const getNMessageBySender = (groupedSet) => {
+  console.log("📊 Starting - Message Amount Analysis");
   const kpi = {};
   Object.entries(groupedSet).forEach(([key, value]) => {
     kpi[key] = value.length;
   });
+
+  console.log("📊 Completed - Message Amount Analysis");
+
   return kpi;
 };
 
 const getMessageLettersAvgLengthBySender = (groupedSet) => {
+  console.log("📊 Starting - Message Letters Avg Length Analysis");
   const kpi = {};
   Object.entries(groupedSet).forEach(([key, value]) => {
     try {
@@ -255,10 +336,14 @@ const getMessageLettersAvgLengthBySender = (groupedSet) => {
       console.error(e);
     }
   });
+
+  console.log("📊 Completed - Message Letters Avg Length Analysis");
+
   return kpi;
 };
 
 const getMessageWordsAvgLengthBySender = (groupedSet) => {
+  console.log("📊 Starting - Message Words Avg Length Analysis");
   const kpi = {};
   Object.entries(groupedSet).forEach(([key, value]) => {
     try {
@@ -269,10 +354,14 @@ const getMessageWordsAvgLengthBySender = (groupedSet) => {
       console.error(e);
     }
   });
+
+  console.log("📊 Completed - Message Words Avg Length Analysis");
+
   return kpi;
 };
 
 const getMessageNEmojiTotalUsageBySender = (groupedSet) => {
+  console.log("📊 Starting - Overall  Used Emoji Analysis");
   const kpi = {};
   Object.entries(groupedSet).forEach(([key, value]) => {
     try {
@@ -283,10 +372,14 @@ const getMessageNEmojiTotalUsageBySender = (groupedSet) => {
       console.error(e);
     }
   });
+
+  console.log("📊 Completed - Overall Used Emoji Analysis");
+
   return kpi;
 };
 
 const getMostUsedEmojiBySender = (groupedSet) => {
+  console.log("📊 Starting - Sender Used Emoji Analysis");
   const kpi = {};
   Object.entries(groupedSet).forEach(([key, value]) => {
     try {
@@ -302,10 +395,15 @@ const getMostUsedEmojiBySender = (groupedSet) => {
       console.error(e);
     }
   });
+
+  console.log("📊 Completed - Sender Used Emoji Analysis");
+
   return kpi;
 };
 
 const writeResultFile = () => {
+  console.log("📄 Writing Result File...");
+
   try {
     fs.writeFile("result.json", JSON.stringify(results), function (err) {
       if (err) return console.log(err);
@@ -313,9 +411,12 @@ const writeResultFile = () => {
   } catch (e) {
     console.log(e);
   }
+
+  console.log("📄 Result File Created");
 };
 
 const main = () => {
+  initMessage();
   readChat();
 };
 
