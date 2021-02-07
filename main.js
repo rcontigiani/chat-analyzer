@@ -1,14 +1,10 @@
-const fs = require("fs");
-const lineReader = require("line-reader");
-var parse = require("date-fns/parse");
-var getHours = require("date-fns/getHours");
-var getDay = require("date-fns/getDay");
-var getMonth = require("date-fns/getMonth");
-var getYear = require("date-fns/getYear");
-var _ = require("lodash");
-var onlyEmoji = require("emoji-aware").onlyEmoji;
-var withoutEmoji = require("emoji-aware").withoutEmoji;
-var figlet = require("figlet");
+//const fs = require("fs");
+import fs from "fs";
+import lineReader from "line-reader";
+import _ from "lodash";
+import { parse, getHours, getDay, getMonth, getYear } from "date-fns";
+import { onlyEmoji, withoutEmoji } from "emoji-aware";
+import figlet from "figlet";
 
 const chat = [];
 var results = {};
@@ -119,7 +115,7 @@ const getMessageByHours = () => {
   var kpi = {};
   try {
     const hourMessageList = [];
-    for (i = 1; i < 25; i++) {
+    for (let i = 1; i < 25; i++) {
       const hourItem = chat.filter((m) => getHours(m.date) === i);
       const item = {
         hour: i,
@@ -165,7 +161,7 @@ const getMessageByWeekDay = () => {
   var kpi = {};
   try {
     const wdMessageList = [];
-    for (i = 0; i < 7; i++) {
+    for (let i = 0; i < 7; i++) {
       const wdItem = chat.filter((m) => getDay(m.date) === i);
       const item = {
         weekDay: i,
@@ -215,7 +211,7 @@ const getMessageByMonth = () => {
       const year = key;
 
       const monthMessageList = [];
-      for (i = 0; i < 12; i++) {
+      for (let i = 0; i < 12; i++) {
         const monthItem = value.filter((m) => getMonth(m.date) === i);
         const item = {
           month: i,
